@@ -26,17 +26,17 @@ void read(FlashCard** cards) {
         card->next = malloc(sizeof(FlashCard));
         card = card->next;
     }
-    card->next = NULL;
+    card->next = *cards; //Circular list
 }
 
-void go(FlashCard* cards) {
-    FlashCard* card = cards;
-    while(card != NULL) {
+void go(const FlashCard* cards) {
+    const FlashCard* card = cards;
+    do {
         printf("%s: ", options.reverse ? card->name : card->answer);
         getchar();
         printf("%s\n",   options.reverse ? card->answer : card->name);
         card = card->next;
-    }
+    } while(card != cards);
 }
 
 void read_options(int argc, char** argv) {
