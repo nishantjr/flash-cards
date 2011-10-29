@@ -39,7 +39,12 @@ void go(const FlashCard* cards) {
     } while(card != cards);
 }
 
-void read_options(int argc, char** argv) {
+#define CHECK_OPT(longopt, shortopt, num_params)  \
+        ((strcmp(argv[i],     "-" shortopt) == 0  \
+          || strcmp(argv[i], "--" longopt)  == 0) \
+         && i < argc - num_params)
+
+static void read_options(int argc, char** argv) {
     if (argc < 2) {
         fprintf(stderr, "USAGE: %s [-r] FILE\n",
                 argv[0]);
@@ -47,9 +52,9 @@ void read_options(int argc, char** argv) {
     }
 
     for (int i = 1; i < argc; i++) {
-        if (strcmp(argv[i], "-r") == 0) {
+        if (CHECK_OPT("reverse", "r", 0))
            options.reverse = 1;
-        } else {
+        else {
             options.input = fopen(argv[i], "r");
             if (options.input == NULL) {
                 fprintf(stderr, "Could not open file '%s'\n",
