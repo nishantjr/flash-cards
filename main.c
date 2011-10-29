@@ -19,7 +19,7 @@ void read(FlashCard** cards) {
     FILE* input = options.input;
     FlashCard* card = malloc(sizeof(FlashCard));
     *cards = card;
-    while (fscanf(input, "%m[^:]:%m[^\n]\n",
+    while (fscanf(input, " %m[^:] : %m[^\n] \n",
                 &card->name,
                 &card->answer) == 2) {
         if(feof(input)) break;
