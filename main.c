@@ -7,6 +7,7 @@ typedef struct FlashCard {
     char* answer;
 
     struct FlashCard* next;
+    struct FlashCard* prev;
 } FlashCard;
 
 typedef struct Options {
@@ -14,29 +15,59 @@ typedef struct Options {
     FILE* input;
 } Options;
 
-Options options;
-void read(FlashCard** cards) {
-    FILE* input = options.input;
-    FlashCard* card = malloc(sizeof(FlashCard));
-    *cards = card;
-    while (fscanf(input, " %m[^:] : %m[^\n] \n",
-                &card->name,
-                &card->answer) == 2) {
-        if(feof(input)) break;
-        card->next = malloc(sizeof(FlashCard));
-        card = card->next;
+void add_card(FlashCard** set, char* name, char* answer) {
+    FlashCard* new_card = calloc(1, sizeof(FlashCard));
+    if (*set == NULL) {
+        new_card->next = new_card;
+        new_card->prev = new_card;
+    } else {
+        new_card->next = (*set)->next;
+        new_card->next->prev = new_card;
+
+        (*set)->next = new_card;
+        (*set)->next->prev = (*set);
     }
-    card->next = *cards; //Circular list
+    *set = new_card;
+    new_card->name = name;
+    new_card->answer = answer;
 }
 
-void go(const FlashCard* cards) {
-    const FlashCard* card = cards;
-    do {
+FlashCard* remove_card(FlashCard** set, FlashCard* card) {
+    if (card == NULL) return NULL;
+    if (card->next == card) {
+        *set = NULL;
+    }
+    card->prev->next = card->next;
+    card->next->prev = card->prev;
+    return card;
+}
+
+Options options;
+void read(FlashCard** set) {
+    FILE* input = options.input;
+    *set = NULL;
+    char *name, *answer;
+    while (fscanf(input, " %m[^:] : %m[^\n]",
+                &name,
+                &answer) == 2) {
+        if (feof(input)) break;
+        add_card(set, name, answer);
+    }
+}
+
+FlashCard* get_next(FlashCard* card) {
+    if (card->next == card) return NULL;
+    return card->next;
+}
+
+void go(FlashCard** set) {
+    FlashCard* card = *set;
+    while((card = remove_card(set, get_next(card))) != NULL) {
         printf("%s: ", options.reverse ? card->name : card->answer);
         getchar();
         printf("%s\n",   options.reverse ? card->answer : card->name);
-        card = card->next;
-    } while(card != cards);
+        free(card);
+    }
 }
 
 #define CHECK_OPT(longopt, shortopt, num_params)  \
@@ -69,6 +100,6 @@ int main(int argc, char** argv) {
     FlashCard* cards;
     read_options(argc, argv);
     read(&cards);
-    go(cards);
+    go(&cards);
     return 0;
 }
