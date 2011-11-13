@@ -1,3 +1,5 @@
+#include <time.h>
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -12,6 +14,7 @@ typedef struct FlashCard {
 
 typedef struct Options {
     short reverse; //Value then name.
+    short random;
     FILE* input;
 } Options;
 
@@ -57,6 +60,11 @@ void read(FlashCard** set) {
 
 FlashCard* get_next(FlashCard* card) {
     if (card->next == card) return NULL;
+    if (options.random == 1) {
+        int forward = rand() % 1001;
+        while (forward--)
+            card = card->next;
+    }
     return card->next;
 }
 
@@ -83,9 +91,12 @@ static void read_options(int argc, char** argv) {
     }
 
     for (int i = 1; i < argc; i++) {
-        if (CHECK_OPT("reverse", "r", 0))
-           options.reverse = 1;
-        else {
+        if        (CHECK_OPT("reverse", "r", 0)) {
+            options.reverse = 1;
+        } else if (CHECK_OPT("random",  "x", 0)) {
+            srand(time(NULL));
+            options.random = 1;
+        } else {
             options.input = fopen(argv[i], "r");
             if (options.input == NULL) {
                 fprintf(stderr, "Could not open file '%s'\n",
