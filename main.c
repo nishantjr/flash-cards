@@ -73,7 +73,7 @@ void go(FlashCard** set) {
     while((card = remove_card(set, get_next(card))) != NULL) {
         printf("%s: ", options.reverse ? card->name : card->answer);
         getchar();
-        printf("%s\n",   options.reverse ? card->answer : card->name);
+        printf("\t%s\n",   options.reverse ? card->answer : card->name);
         free(card);
     }
 }
