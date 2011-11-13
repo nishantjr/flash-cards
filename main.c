@@ -15,7 +15,9 @@ typedef struct FlashCard {
 typedef struct Options {
     short reverse; //Value then name.
     short random;
-    FILE* input;
+
+    int file_count;
+    FILE** files;
 } Options;
 
 void add_card(FlashCard** set, char* name, char* answer) {
@@ -46,14 +48,12 @@ FlashCard* remove_card(FlashCard** set, FlashCard* card) {
 }
 
 Options options;
-void read(FlashCard** set) {
-    FILE* input = options.input;
-    *set = NULL;
+void read(FILE* file, FlashCard** set) {
     char *name, *answer;
-    while (fscanf(input, " %m[^:] : %m[^\n]",
+    while (fscanf(file, " %m[^:] : %m[^\n]",
                 &name,
                 &answer) == 2) {
-        if (feof(input)) break;
+        if (feof(file)) break;
         add_card(set, name, answer);
     }
 }
@@ -84,6 +84,7 @@ void go(FlashCard** set) {
          && i < argc - num_params)
 
 static void read_options(int argc, char** argv) {
+    memset(&options, 0, sizeof(options));
     if (argc < 2) {
         fprintf(stderr, "USAGE: %s [-r] FILE\n",
                 argv[0]);
@@ -97,20 +98,24 @@ static void read_options(int argc, char** argv) {
             srand(time(NULL));
             options.random = 1;
         } else {
-            options.input = fopen(argv[i], "r");
-            if (options.input == NULL) {
+            options.file_count++;
+            options.files = realloc(options.files,
+                                    options.file_count
+                                    * sizeof(options.files[0]));
+            if ((options.files[options.file_count - 1]
+                        = fopen(argv[i], "r")) == NULL) {
                 fprintf(stderr, "Could not open file '%s'\n",
                         argv[i]);
-                exit(0);
             }
         }
     }
 }
 
 int main(int argc, char** argv) {
-    FlashCard* cards;
+    FlashCard* cards = NULL;
     read_options(argc, argv);
-    read(&cards);
+    for (int i=0; i<options.file_count; i++)
+        read(options.files[i], &cards);
     go(&cards);
     return 0;
 }
